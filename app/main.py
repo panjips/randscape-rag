@@ -6,11 +6,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
 from fastapi import FastAPI
 from models import QueryRequest, QueryResponse
 from utils import retriver, process_document
+from config import Config
 
 app = FastAPI(title="Simple RAG Chatbot", version="0.1")
 
-DB_PATH = os.getcwd() + "/db"
-if not os.path.exists(DB_PATH) or not os.listdir(DB_PATH):
+if not os.path.exists(Config.DB_PATH) or not os.listdir(Config.DB_PATH):
     process_document()
 
 @app.get("/")
@@ -24,4 +24,4 @@ def query_chatbot(request: QueryRequest):
     return QueryResponse(answer=results)
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", port=8000, reload=True)
