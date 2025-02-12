@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
 
 from fastapi import FastAPI
 from models import QueryRequest, QueryResponse
-from utils import retriver, process_document
+from utils import chat, process_document
 from config import Config
 
 app = FastAPI(title="Simple RAG Chatbot", version="0.1")
@@ -20,7 +20,7 @@ def read_root():
 @app.post("/query/", response_model=QueryResponse)
 def query_chatbot(request: QueryRequest):
     question = request.question
-    results = retriver(question)
+    results = chat(question)
     return QueryResponse(answer=results)
 
 if __name__ == "__main__":

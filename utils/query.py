@@ -10,8 +10,13 @@ def get_vector_store():
     
     return vectorStore
 
-def retriver(query):
+def retriver(query, k: int = 5):
     vectorStore = get_vector_store()
-    results = vectorStore.similarity_search(query, k=2)
+    results = vectorStore.similarity_search_with_score(query, k)
 
-    return [doc.page_content for doc in results]
+    highest = []
+    if results :
+        highest_doc, _ = max(results, key=lambda x: x[1])
+        highest.append(highest_doc.page_content)
+
+    return highest

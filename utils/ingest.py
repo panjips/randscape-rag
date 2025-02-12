@@ -2,27 +2,29 @@ import os
 import glob
 
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_core.documents import Document
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
 from app.config import Config
 
 def process_document():
-    loader = PyPDFLoader(Config.FILE_PATH+"example.pdf")
-    documents = loader.load()
+    files = glob.glob(os.path.join(Config.FILE_PATH, "*.pdf"))
+    documents = []
 
-    splitter = CharacterTextSplitter(
-        chunk_size=int(Config.CHUNK_SIZE),
-        chunk_overlap=int(Config.CHUNK_OVERLAP)
-    )
-    text_chunks = splitter.split_documents(documents)
-    document_list = [
-        Document(page_content=chunk.page_content, metadata={"source": Config.CHROMA_COLLECTION})
-        for chunk in text_chunks
-    ]
+    for file in files:
+        loader = PyPDFLoader(file)
+        document = loader.load()
+
+        splitter = RecursiveCharacterTextSplitter(
+            separators= ["\n", ".", "!", "?", ";"],
+            chunk_size=int(Config.CHUNK_SIZE),
+            chunk_overlap=int(Config.CHUNK_OVERLAP)
+        )
+
+        text_chunks = splitter.split_documents(document)
+        documents.extend(text_chunks)
 
     embeddings = OllamaEmbeddings(model=Config.OLLAMA_MODEL, base_url=Config.OLLAMA_BASE_URL)
 
     vectorStore = Chroma(collection_name=Config.CHROMA_COLLECTION, embedding_function=embeddings, persist_directory=Config.DB_PATH)
-    vectorStore.add_documents(document_list)
+    vectorStore.add_documents(documents)
